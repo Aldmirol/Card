@@ -9,9 +9,12 @@
                 :inputClasses="panInput.inputClasses"
                 :labelClasses="panInput.labelClasses"
                 :maskPattern="'#### #### #### ####'"
-                :isError="false"
                 v-model="panInput.value"
-                
+            />
+            <WarningLight
+                :classList="panLight.classList"
+                :isCorrect="panLight.isCorrect"
+                :isError="panLight.isError"
             />
         </div>
         <div class="bottom-wrapper">
@@ -25,7 +28,6 @@
                         :placeholder="expireMonthInput.placeholder"
                         :maskPattern="'##'"
                         v-model="expireMonthInput.value"
-                        :isError="false"
                     />
                     <span class="expire-separator">/</span>
                     <BaseInput
@@ -34,23 +36,31 @@
                         :inputClasses="expireYearInput.inputClasses"
                         :placeholder="expireYearInput.placeholder"
                         :maskPattern="'##'"
-                        :isError="false"
                         v-model="expireYearInput.value"
                     />
                 </div>
-            
-        </div>
+                <WarningLight
+                :classList="dateLight.classList"
+                :isCorrect="isCorrectDate"
+                :isError="dateLight.isError"
+            />
+            </div>
         <div class="bottom-right-wrapper">
             <div class="cvc-title">
                 <span>CVV/CVC</span>
-                <span class="question-sign">&quest;</span>
+                <span class="question-sign" title="Help must be there">&quest;</span>
+                <font-awesome-icon icon="eraser" class="eraser" @click="removeValue"/>
             </div>
             <BaseInput
                 :id="cvcInput.id"
                 :inputClasses="cvcInput.inputClasses"
                 :maskPattern="'###'"
-                :isError="false"
                 v-model="cvcInput.value"
+            />
+            <WarningLight
+                :classList="cvcLight.classList"
+                :isCorrect="cvcLight.isCorrect"
+                :isError="cvcLight.isError"
             />
         </div>
         </div>
@@ -59,11 +69,13 @@
 </template>
 
 <script>
-import BaseInput from './base/BaseInput.vue'
+import BaseInput from './base/BaseInput.vue';
+import WarningLight from './base/WarningLight.vue';
 
 export default {
     components: {
         BaseInput,
+        WarningLight,
     },
     data() {
         return {
@@ -75,6 +87,11 @@ export default {
                 inputClasses: ['pan-input', 'hidden-borders'],
                 labelClasses: ['pan-label'],
                 value: null,
+            },
+            panLight: {
+                classList: ['pan-position'],
+                isError: false,
+                isCorrect: false
             },
             expireMonthInput: {
                 id: 'expire-month',
@@ -90,18 +107,71 @@ export default {
                 placeholder: 'ГГ',
                 value: null,
             },
+            dateLight: {
+                classList: ['date-position'],
+                isCorrect: false,
+                isError: true,
+            },
             cvcInput: {
                 id: 'cvc-input',
                 inputClasses: ['cvc-input', 'hidden-borders'],
-                value: null,
+            },
+            cvcLight: {
+                classList: ['cvc-position'],
+                isCorrect: false,
+                isError: false,
+            },
+        }
+    },
+    methods: {
+        removeValue() {
+            this.panInput.value = '';
+            this.expireMonthInput.value = '';
+            this.expireYearInput.value = '';
+            this.cvcInput.value = '';
+        }
+    },
+    computed: {
+        isCorrectDate() {
+            const monthValue = +this.expireMonthInput.value;
+            const yearValue = +this.expireYearInput.value;
+            if (monthValue > 0 && monthValue <= 31) {
+                return true;
+            } else {
+                return false;
             }
         }
     },
     watch: {
+        isCorrectDate: function(value) {
+            if (value) {
+                this.dateLight.isCorrect = true;
+            }
+        },
+        'cvcInput.value': function(value) {
+            if (value === '000') {
+                this.cvcLight.isError = true;
+            } else if (value.length === 3) {
+                this.cvcLight.isError = false;
+                this.cvcLight.isCorrect = true;
+            } else {
+                this.cvcLight.isError = false;
+                this.cvcLight.isCorrect = false;
+            }
+        },
         'panInput.value': function(value) {
-            this.expireMonthInput.value = value;
-            this.expireYearInput.value = value;
-            this.cvcInput.value = value;
+            let str = value.replace(/\s/g, '')
+
+            if (str.length > 0 && str.length < 16) {
+                this.panLight.isCorrect = false;
+                this.panLight.isError = true;
+            } else if (str.length === 16) {
+                this.panLight.isError = false;
+                this.panLight.isCorrect = true;
+            } else if (str.length === 0) {
+                this.panLight.isError = false;
+                this.panLight.isCorrect = false;
+            }
         }
     }
 }
@@ -122,6 +192,7 @@ export default {
     .top-wrapper {
         height: 30%;
         width: 90%;
+        position: relative;
     }
 
     .bottom-wrapper {
@@ -133,6 +204,7 @@ export default {
     .bottom-left-wrapper,
     .bottom-right-wrapper {
         width: 50%;
+        position: relative;
     }
 
     .expiration-title,
@@ -158,6 +230,14 @@ export default {
         border-radius: 50%;
         text-align: center;
         cursor: pointer;
+    }
+
+    .eraser {
+        position: absolute;
+        top: -150px;
+        left: 215px;
+        cursor: pointer;
+        color: #575353;
     }
 
     .left-wrapper-container {

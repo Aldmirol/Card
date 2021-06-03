@@ -7,9 +7,8 @@
             :placeholder="placeholder"
             :class="inputClasses"
             v-maska="maskPattern"
-            :isError="isError"
-            v-model="value"
-            @input="$emit('input', value)"
+            v-model="currentValue"
+            @input="action(currentValue)"
         >
     </div>
 </template>
@@ -27,16 +26,26 @@ export default {
         label: String,
         labelClasses: Array,
         maskPattern: String,
-        isError: Boolean,
+        value: String
     },
     directives: {
         maska
     },
     data() {
         return {
-            value: null
+            currentValue: null
         }
     },
+    methods: {
+        action(value) {
+            this.$emit('input', value);
+        }
+    },
+    watch: {
+        value() {
+            this.currentValue = this.value;
+        }
+    }
 }
 </script>
 
