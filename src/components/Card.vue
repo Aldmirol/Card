@@ -134,8 +134,10 @@ export default {
     computed: {
         isCorrectDate() {
             const monthValue = +this.expireMonthInput.value;
+            const today = new Date;
+            const currentYear = today.getFullYear();
             const yearValue = +this.expireYearInput.value;
-            if (monthValue > 0 && monthValue <= 31) {
+            if ((monthValue > 0 && monthValue <= 12 && (yearValue === currentYear - 2000))) {
                 return true;
             } else {
                 return false;
